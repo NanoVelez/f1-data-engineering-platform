@@ -40,15 +40,27 @@ graph LR
 * **Source:** OpenF1 API.
 
 ## 🚀 Roadmap & Progress
-[x] Environment Setup (Fabric + GitHub).
+- [x] **Phase 1: Environment Setup (Fabric + GitHub)**
 
-[ ] Bronze Layer Ingestion (Drivers, Constructors, Circuits).
+- [ ] **Phase 2: Ingestion (Bronze)**
+    - [x] Drivers Data
+    - [ ] Constructors Data
+    - [ ] Circuits Data
 
-[ ] Silver Layer Transformation (Data Cleaning).
+- [ ] **Phase 3: Silver Layer Transformation (Data Cleaning)**
+    - [ ] Drivers Data
+    - [ ] Constructors Data
+    - [ ] Circuits Data
+    
+- [ ] **Phase 4: Gold Layer Modeling (Dimensions & Facts)**
+    - [ ] Drivers Data
+    - [ ] Constructors Data
+    - [ ] Circuits Data
 
-[ ] Gold Layer Modeling (Dimensions & Facts).
-
-[ ] Final Dashboard in Power BI.
+- [ ] **Phase 5: Final Dashboard in Power BI**
+    - [ ] Drivers Data
+    - [ ] Constructors Data
+    - [ ] Circuits Data
 
 ## 💻 How to Run
 This project is designed to run inside a Microsoft Fabric Workspace.
