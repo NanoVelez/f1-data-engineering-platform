@@ -38,10 +38,10 @@ The data flows from the API through a structured Lakehouse architecture:
 ## 🚀 Roadmap & Progress
 - [x] **Phase 1: Environment Setup (Fabric + GitHub)**
 
-- [ ] **Phase 2: Ingestion (Bronze)**
+- [x] **Phase 2: Ingestion (Bronze)**
     - [x] Drivers Data
-    - [ ] Constructors Data
-    - [ ] Circuits Data
+    - [x] Constructors Data
+    - [x] Circuits Data
 
 - [ ] **Phase 3: Silver Layer Transformation (Data Cleaning)**
     - [ ] Drivers Data
