@@ -15,7 +15,7 @@ The main goal is to apply **DP-600 (Fabric Analytics Engineer)** certification c
 The data flows from the API through a structured Lakehouse architecture:
 
 <div align="center">
-  <img src="assets/mermaid-architecture_medallion.png" alt="Architecture Diagram" width="800"/>
+  <img src="assets/mermaid-architecture_medallion_v2.png" alt="Architecture Diagram" width="800"/>
 </div>
 
 * **Bronze (Raw):** Landing zone for raw JSON data from the API.
