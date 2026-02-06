@@ -29,7 +29,7 @@ import time
 
 # --- CONFIGURATION ---
 BASE_URL = "https://api.openf1.org/v1"
-YEAR = "2023"
+YEAR = "2024"
 PATH_BRONZE = f"Files/bronze/{YEAR}"
 
 # --- 1. CLEANUP ---
