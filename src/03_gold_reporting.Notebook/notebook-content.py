@@ -44,7 +44,7 @@ spark.table("silver_drivers").alias("d") \
     .select(
         "Driver_ID",
         col("driver_number").alias("Number"),
-        "year",
+        col("year").alias("Year"),
         col("full_name").alias("Driver"),
         col("headshot_url").alias("Driver_Photo"),
         col("country_code").alias("Driver_Country"),
@@ -99,12 +99,11 @@ df_gold_race = df_calculated \
         col("gp_name").alias("Grand_Prix"),      
         col("circuit").alias("Circuit_Name"),    
         col("GP_Display"),                       
-        col("date_start").alias("Date"),         # Fecha REAL de ese año específico
-        col("date_start").alias("Order_Date")    
+        col("date_start").alias("Date"),         # Fecha REAL de ese año específico   
     ).distinct()
 
 # Guardamos como gold_dim_race (Dimensión de Carrera)
-df_gold_race.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_circuit")
+df_gold_race.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_race")
 # ==============================================================================
 # 4. DIM YEAR
 # ==============================================================================
@@ -158,7 +157,6 @@ df_fact_driver = df_joined \
         col("Team_ID"),
         col("c.meeting_key"),
         col("f.year").alias("Year"),
-        col("c.date_start").alias("Date"),
         
         # --- LOS DATOS CLAVE ---
         col("Race_Points"),                          # Puntos ganados hoy (calculado)
@@ -206,7 +204,6 @@ df_fact_team = df_joined_t \
         col("Team_ID"),
         col("c.meeting_key"),
         col("f.year").alias("Year"),
-        col("c.date_start").alias("Date"),
         
         # --- LOS DATOS CLAVE ---
         col("Race_Points"),                          # Puntos del día (calculado)
@@ -217,6 +214,27 @@ df_fact_team = df_joined_t \
 df_fact_team.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_fact_team_results")
 
 print("✅ Fact Teams actualizada. Ranking de Constructores listo.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- DEBUGGING: ¿QUÉ ESTÁ SUMANDO MAX? ---
+from pyspark.sql.functions import col
+
+print("🔍 Inspeccionando China (Meeting 1209) y Miami (Meeting 1210) para Max...")
+
+spark.table("gold_fact_driver_results") \
+    .filter(col("Driver_ID") == 1) \
+    .filter(col("year") == 2024) \
+    .filter(col("meeting_key").isin(1209, 1210)) \
+    .select("meeting_key", "session_type", "position", "points") \
+    .show()
 
 # METADATA ********************
 

@@ -9,7 +9,7 @@ table gold_fact_driver_results
 			CALCULATE(
 			    SUM(gold_fact_driver_results[Season_Points]), 
 			    KEEPFILTERS(gold_fact_driver_results[meeting_key] = UltimoMeetingID),
-			    ALL(gold_dim_circuit) -- O el nombre que tenga tu tabla de circuitos/carreras
+			    ALL(gold_dim_race) -- O el nombre que tenga tu tabla de circuitos/carreras
 			)
 			```
 		lineageTag: 89ddd7ab-566b-4f38-a95e-4df2345a4c60
@@ -49,28 +49,6 @@ table gold_fact_driver_results
 		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = User
-
-	column Date
-		dataType: dateTime
-		isHidden
-		formatString: dd/mm/yyyy
-		sourceProviderType: datetime2
-		lineageTag: a3694b40-0f04-479a-bc8d-e46788e4a630
-		sourceLineageTag: Date
-		summarizeBy: none
-		sourceColumn: Date
-
-		changedProperty = DataType
-
-		changedProperty = FormatString
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation UnderlyingDateTimeDataType = Date
-
-		annotation PBI_FormatHint = {"isCustom":true}
 
 	column 'Driver ID'
 		dataType: string

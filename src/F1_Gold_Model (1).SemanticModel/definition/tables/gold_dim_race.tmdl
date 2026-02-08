@@ -1,0 +1,94 @@
+table gold_dim_race
+	lineageTag: c7755364-968e-46d2-a32f-cc627b80d016
+	sourceLineageTag: [dbo].[gold_dim_race]
+
+	column meeting_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 94e7876e-dfe1-4acd-acdb-aa90ed94f0f6
+		sourceLineageTag: meeting_key
+		summarizeBy: none
+		sourceColumn: meeting_key
+
+		changedProperty = SummarizeBy
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = User
+
+	column Year
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 57892f34-421a-41db-925e-c11d4612757b
+		sourceLineageTag: Year
+		summarizeBy: none
+		sourceColumn: Year
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column Grand_Prix
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 23f879e5-4baf-4051-8adc-a7a6242da136
+		sourceLineageTag: Grand_Prix
+		summarizeBy: none
+		sourceColumn: Grand_Prix
+
+		annotation SummarizationSetBy = Automatic
+
+	column Circuit_Name
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 800bb7ee-bc3f-47ac-bcac-edf572076f36
+		sourceLineageTag: Circuit_Name
+		dataCategory: Place
+		summarizeBy: none
+		sourceColumn: Circuit_Name
+
+		changedProperty = DataCategory
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column GP_Display
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: ca923cf5-3a10-4d55-acac-ed73d7590390
+		sourceLineageTag: GP_Display
+		summarizeBy: none
+		sourceColumn: GP_Display
+		sortByColumn: Date
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: b2cd7c00-d831-4a01-9f82-8d9e71c7b2e1
+		sourceLineageTag: Date
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition gold_dim_race = entity
+		mode: directLake
+		source
+			entityName: gold_dim_race
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

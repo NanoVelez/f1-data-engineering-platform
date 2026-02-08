@@ -72,6 +72,7 @@ table gold_dim_driver
 
 	column Season_Rank_Sort
 		dataType: int64
+		isHidden
 		formatString: 0
 		sourceProviderType: int
 		lineageTag: 6f932be7-afb7-4054-8f3e-6313fe9894c9
@@ -79,16 +80,18 @@ table gold_dim_driver
 		summarizeBy: none
 		sourceColumn: Season_Rank_Sort
 
+		changedProperty = IsHidden
+
 		annotation SummarizationSetBy = Automatic
 
-	column year
+	column Year
 		dataType: int64
 		formatString: 0
 		sourceProviderType: int
-		lineageTag: fbe1d7c1-c296-4749-af3c-3092de0c3a9d
-		sourceLineageTag: year
+		lineageTag: 8303c59c-bbd1-4d7a-b0d9-14ba6291bd9e
+		sourceLineageTag: Year
 		summarizeBy: none
-		sourceColumn: year
+		sourceColumn: Year
 
 		annotation SummarizationSetBy = Automatic
 

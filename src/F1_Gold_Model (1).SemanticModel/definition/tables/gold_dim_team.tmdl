@@ -34,6 +34,7 @@ table gold_dim_team
 
 	column 'Hex Color'
 		dataType: string
+		isHidden
 		sourceProviderType: varchar(8000)
 		lineageTag: 6e9a1a31-5d04-484c-8313-b8d9d4fdcf68
 		sourceLineageTag: Hex_Color

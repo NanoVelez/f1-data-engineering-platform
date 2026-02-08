@@ -9,7 +9,7 @@ table gold_fact_team_results
 			CALCULATE(
 			    SUM(gold_fact_team_results[Season_Points]), 
 			    KEEPFILTERS(gold_fact_team_results[meeting_key] = UltimoMeetingID),
-			    ALL(gold_dim_circuit) -- O el nombre que tenga tu tabla de circuitos/carreras
+			    ALL(gold_dim_race) -- O el nombre que tenga tu tabla de circuitos/carreras
 			)
 			```
 		lineageTag: d1060563-b929-499b-a091-6e90b9e2261a
@@ -50,28 +50,6 @@ table gold_fact_team_results
 
 		annotation SummarizationSetBy = User
 
-	column Date
-		dataType: dateTime
-		isHidden
-		formatString: dd/mm/yyyy
-		sourceProviderType: datetime2
-		lineageTag: be56e5b3-ed0c-4727-a5db-eea916e8ff4a
-		sourceLineageTag: Date
-		summarizeBy: none
-		sourceColumn: Date
-
-		changedProperty = DataType
-
-		changedProperty = FormatString
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation UnderlyingDateTimeDataType = Date
-
-		annotation PBI_FormatHint = {"isCustom":true}
-
 	column 'Team ID'
 		dataType: string
 		isHidden
@@ -104,7 +82,6 @@ table gold_fact_team_results
 
 	column Season_Points
 		dataType: double
-		isHidden
 		sourceProviderType: real
 		lineageTag: 4520f1f0-840a-4bb2-a40e-493fa967cfd3
 		sourceLineageTag: Season_Points
