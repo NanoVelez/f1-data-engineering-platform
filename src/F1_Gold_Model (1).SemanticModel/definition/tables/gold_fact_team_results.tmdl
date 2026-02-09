@@ -23,40 +23,39 @@ table gold_fact_team_results
 			VAR FechaPlay = MAX('gold_ui_play_timeline'[Date])
 			VAR HayJuego = ISFILTERED('gold_ui_play_timeline')
 			
-			VAR UltimaFechaConDatos = 
-			    CALCULATE(
-			        MAX(gold_dim_race[Date]),
-			        REMOVEFILTERS(gold_dim_race),
-			        NOT(ISBLANK(gold_fact_team_results[World_Position]))
-			    )
-			
 			VAR FechaCorte = 
 			    IF(
 			        HayJuego, 
-			        MIN(FechaPlay, UltimaFechaConDatos), 
-			        UltimaFechaConDatos
+			        FechaPlay, 
+			        MAX(gold_dim_race[Date]) 
 			    )
 			
-			VAR FechaRealDelEvento = 
+			VAR FechaUltimaCarreraValida = 
 			    CALCULATE(
 			        MAX(gold_dim_race[Date]),
-			        REMOVEFILTERS(gold_dim_race),
+			        ALL(gold_dim_team), 
+			        REMOVEFILTERS(gold_dim_race), 
 			        gold_dim_race[Date] <= FechaCorte,
 			        NOT(ISBLANK(gold_fact_team_results[World_Position]))
 			    )
 			
-			VAR UltimoMeetingValido = 
+			VAR RaceKeyDestino = 
 			    CALCULATE(
 			        MAX(gold_fact_team_results[Race_Key]),
-			        REMOVEFILTERS(gold_dim_race),
-			        gold_dim_race[Date] = FechaRealDelEvento 
+			        ALL(gold_dim_team),
+			        REMOVEFILTERS(gold_dim_race), 
+			        gold_dim_race[Date] = FechaUltimaCarreraValida
+			    )
+			
+			VAR Resultado = 
+			    CALCULATE(
+			        MAX(gold_fact_team_results[World_Position]),
+			        gold_fact_team_results[Race_Key] = RaceKeyDestino,
+			        REMOVEFILTERS(gold_dim_race) 
 			    )
 			
 			RETURN
-			    CALCULATE(
-			        MAX(gold_fact_team_results[World_Position]),
-			        gold_fact_team_results[Race_Key] = UltimoMeetingValido
-			    )
+			    IF(ISBLANK(Resultado), BLANK(), Resultado)
 			```
 		formatString: 0
 		lineageTag: 51edf90a-3a56-49d3-8283-cb5977a22cdf
