@@ -33,32 +33,16 @@ table gold_fact_team_results
 			        MAX(gold_dim_race[Date]) 
 			    )
 			
-			VAR FechaUltimaCarreraValida = 
-			    CALCULATE(
-			        MAX(gold_dim_race[Date]),
-			        ALL(gold_dim_team), 
-			        REMOVEFILTERS(gold_dim_race), 
-			        gold_dim_race[Date] <= FechaCorte,
-			        NOT(ISBLANK(gold_fact_team_results[World_Position]))
-			    )
-			
-			VAR RaceKeyDestino = 
-			    CALCULATE(
-			        MAX(gold_fact_team_results[Race_Key]),
-			        ALL(gold_dim_team),
-			        REMOVEFILTERS(gold_dim_race), 
-			        gold_dim_race[Date] = FechaUltimaCarreraValida
-			    )
-			
-			VAR Resultado = 
-			    CALCULATE(
-			        MAX(gold_fact_team_results[World_Position]),
-			        gold_fact_team_results[Race_Key] = RaceKeyDestino,
-			        REMOVEFILTERS(gold_dim_race) 
-			    )
-			
 			RETURN
-			    IF(ISBLANK(Resultado), BLANK(), Resultado)
+			    CALCULATE(
+			        LASTNONBLANKVALUE(
+			            gold_dim_race[Date],
+			            MAX(gold_fact_team_results[World_Position])
+			        ),
+			        REMOVEFILTERS(gold_dim_race),
+			        gold_dim_race[Date] <= FechaCorte,
+			        VALUES(gold_dim_race[Year])
+			    )
 			```
 		formatString: 0
 		lineageTag: 51edf90a-3a56-49d3-8283-cb5977a22cdf
