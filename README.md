@@ -7,7 +7,7 @@
 </div>
 
 ## 📖 Project Overview
-This personal project aims to build a complete **End-to-End Data Pipeline** using **Microsoft Fabric**. The system ingests historical and real-time Formula 1 data, processes it following the Medallion Architecture (Bronze, Silver, Gold), and serves it for analytical reporting.
+This personal project aims to build a complete **End-to-End Data Pipeline** using **Microsoft Fabric**. The system ingests historical Formula 1 data, processes it following the Medallion Architecture (Bronze, Silver, Gold), and serves it for analytical reporting.
 
 The main goal is to apply **DP-600 (Fabric Analytics Engineer)** certification concepts in a real-world scenario.
 
@@ -57,27 +57,40 @@ The data flows from the API through a structured Lakehouse architecture:
     - [x] Driver Championship Data
     - [x] Constructor Championship Data
 
-## 💻 How to Run
-This project is designed to run inside a Microsoft Fabric Workspace.
+## 💻 How to Run & Deploy
 
-1. Create a Fabric Workspace.
+This project is built to run natively inside a **Microsoft Fabric Workspace**.
 
-2. Connect the Workspace to this GitHub repository via "Workspace Settings > Git Integration".
+### 1. Environment Setup
+1.  Create a new **Fabric Workspace** (with Trial or Capaciity enabled).
+2.  Go to **Workspace Settings > Git Integration**.
+3.  Connect this repository and click **Sync** or **Connect**. This will automatically import all Notebooks and Pipelines.
 
-3. Sync the repository to import the Notebooks.
+### 2. Data Ingestion (Orchestration)
+Instead of running notebooks manually, trigger the master pipeline to handle dependencies:
+1.  Open the pipeline named **`Data Pipe`**.
+2.  Click **Run**.
+    * *This will execute the Bronze (Ingestion) -> Silver (Transformation) -> Gold (Modeling) notebooks in sequence.*
 
-4. Run the notebooks in numerical order (01 -> 02 -> 03).
+### 3. Visualization
+1.  **Download the Report:**
+2.  **Get Your Connection String:**
+3.  **Re-point the Report:**
+4.  **Publish:** Click **Refresh** to load your data, then **Publish** to save it into your Fabric Workspace.
 
 ## 📂 Project Structure
-The repository is organized to separate logic, data, and configuration:
 ```text
 f1-fabric-proyect/
 │
-├── 📂 assets/             # Static resources (images, schemas)
-├── 📂 src/                # Reusable Python modules/functions
-│   ├── 01_ingestion/     # API -> Bronze (Raw JSON)
-│   ├── 02_transform/     # Bronze -> Silver (Delta Tables)
-│   └── 03_analysis/      # Silver -> Gold (Aggregations)
-├── 📂 data/               # Sample data (excluded from git via .gitignore)
-├── .gitignore            # Security configuration
-└── README.md             # Project Documentation
+├── 📂 assets/                  # Static resources for UI & Documentation
+│   ├── 📂 teams/               # Team logos and assets for Power BI
+│   └── 📂 screenshots/         # Images used in this README
+│
+├── 📂 src/                     # Source Code (Fabric Notebooks & ETL)
+│   ├── 01_bronze_ingest.ipynb    # API Extraction -> Raw JSON
+│   ├── 02_silver_transform.ipynb # Data Cleaning & Schema -> Delta Parquet
+│   └── 03_gold_modeling.ipynb    # Star Schema Modeling -> Reporting Tables
+│
+├── F1_Analytics.pbix        # Power BI Report file (or .pbip)
+├── .gitignore                  # Git configuration
+└── README.md                   # Project Documentation
