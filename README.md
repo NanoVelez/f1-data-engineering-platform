@@ -73,13 +73,11 @@ The repository is organized to separate logic, data, and configuration:
 ```text
 f1-fabric-proyect/
 │
-├── 📂 notebooks/          # Fabric Notebooks (PySpark/SQL)
+├── 📂 assets/             # Static resources (images, schemas)
+├── 📂 src/                # Reusable Python modules/functions
 │   ├── 01_ingestion/     # API -> Bronze (Raw JSON)
 │   ├── 02_transform/     # Bronze -> Silver (Delta Tables)
 │   └── 03_analysis/      # Silver -> Gold (Aggregations)
-│
-├── 📂 assets/             # Static resources (images, schemas)
-├── 📂 src/                # Reusable Python modules/functions
 ├── 📂 data/               # Sample data (excluded from git via .gitignore)
 ├── .gitignore            # Security configuration
 └── README.md             # Project Documentation
