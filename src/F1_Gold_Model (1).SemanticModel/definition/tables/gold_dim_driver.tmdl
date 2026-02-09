@@ -15,7 +15,7 @@ table gold_dim_driver
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Driver Photo'
+	column Driver_Photo
 		dataType: string
 		sourceProviderType: varchar(8000)
 		lineageTag: eb4f49a1-0c4e-45a5-9eae-0db510eb2255
@@ -24,21 +24,17 @@ table gold_dim_driver
 		summarizeBy: none
 		sourceColumn: Driver_Photo
 
-		changedProperty = Name
-
 		changedProperty = DataCategory
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Driver Country'
+	column Driver_Country
 		dataType: string
 		sourceProviderType: varchar(8000)
 		lineageTag: 2736f216-caa3-45cd-b848-262377f36ac4
 		sourceLineageTag: Driver_Country
 		summarizeBy: none
 		sourceColumn: Driver_Country
-
-		changedProperty = Name
 
 		annotation SummarizationSetBy = Automatic
 

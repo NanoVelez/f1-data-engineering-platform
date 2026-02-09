@@ -22,98 +22,20 @@
 
 # CELL ********************
 
-# --- CELL: DIMENSIONS (CORRECCIÓN FINAL: NOMBRES DE COLUMNA REALES) ---
+# --- CELL 0: GOLD GLOBAL SETUP ---
+
+# 1. Analytical Imports (Essential for Gold Layer)
 from pyspark.sql.window import Window
-from pyspark.sql.functions import col, concat, lit, max as _max, row_number, desc, upper, substring, count, when, size, collect_set
+from pyspark.sql.functions import (
+    col, lit, when, concat, substring, upper, trim,
+    max as _max, min as _min, count, size, collect_set,
+    row_number, desc, lag
+)
 
-print("🏗️ Generando Dimensiones (Adaptado a tu esquema: gp_name, city, circuit)...")
+# 2. Spark Configuration
+spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
 
-# ==============================================================================
-# 1. DIM DRIVER (Igual que antes)
-# ==============================================================================
-w_last = Window.partitionBy("driver_number", "year").orderBy(col("meeting_key").desc())
-
-df_rank = spark.table("silver_drivers_standings") \
-    .withColumn("rn", row_number().over(w_last)) \
-    .filter("rn == 1") \
-    .select("driver_number", "year", col("position").cast("int").alias("Season_Rank_Sort"))
-
-spark.table("silver_drivers").alias("d") \
-    .join(df_rank.alias("r"), ["driver_number", "year"], "left") \
-    .withColumn("Driver_ID", concat(col("driver_number"), lit("-"), col("year"))) \
-    .select(
-        "Driver_ID",
-        col("driver_number").alias("Number"),
-        col("year").alias("Year"),
-        col("full_name").alias("Driver"),
-        col("headshot_url").alias("Driver_Photo"),
-        col("country_code").alias("Driver_Country"),
-        "Season_Rank_Sort"
-    ).dropDuplicates(["Driver_ID"]) \
-    .write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_driver")
-
-# ==============================================================================
-# 2. DIM TEAM (Igual que antes)
-# ==============================================================================
-df_teams = spark.table("silver_teams_standings")
-df_drivers = spark.table("silver_drivers")
-
-df_team_joined = df_teams.alias("t") \
-    .join(df_drivers.alias("d"), 
-          (col("t.team_name") == col("d.team_name")) & 
-          (col("t.year") == col("d.year")), 
-          "left") \
-    .withColumn("Team_ID", concat(col("t.team_name"), lit("-"), col("t.year")))
-
-w_team = Window.partitionBy("Team_ID").orderBy(col("t.year").desc())
-
-df_team_joined.withColumn("rn", row_number().over(w_team)) \
-    .filter(col("rn") == 1) \
-    .select(
-        col("Team_ID"),
-        col("t.team_name").alias("Team"),
-        col("t.year").alias("Year"),
-        col("t.team_logo_url").alias("Team_Logo"),
-        col("d.team_colour").alias("Hex_Color")
-    ) \
-    .write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_team")
-
-# --- CELL: DIM CIRCUIT (SOLUCIÓN FINAL: DEDUPLICACIÓN DE CLAVES) ---
-df_circuits = spark.table("silver_circuits")
-
-# 1. Generar códigos visuales (Misma lógica inteligente de antes)
-df_pre = df_circuits.withColumn("Default_Code", upper(substring(col("gp_name"), 1, 3)))
-w_conflict = Window.partitionBy("Default_Code")
-df_calculated = df_pre.withColumn("Distinct_GPs", size(collect_set("gp_name").over(w_conflict)))
-
-# 2. Crear la Dimensión basada en MEETING_KEY (Evento) y no Circuit_Key (Lugar)
-df_gold_race = df_calculated \
-    .withColumn("GP_Display", 
-        when(col("Distinct_GPs") > 1, 
-             upper(substring(col("circuit"), 1, 3))) 
-        .otherwise(col("Default_Code"))
-    ) \
-    .select(
-        col("meeting_key"),                      # <--- CLAVE PRINCIPAL (Única por carrera y año)
-        col("year").alias("Year"),               # Importante para filtrar
-        col("gp_name").alias("Grand_Prix"),      
-        col("circuit").alias("Circuit_Name"),    
-        col("GP_Display"),                       
-        col("date_start").alias("Date"),         # Fecha REAL de ese año específico   
-    ).distinct()
-
-# Guardamos como gold_dim_race (Dimensión de Carrera)
-df_gold_race.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_race")
-# ==============================================================================
-# 4. DIM YEAR
-# ==============================================================================
-spark.table("silver_circuits") \
-    .select(col("year").alias("Year")) \
-    .distinct() \
-    .orderBy(col("Year").desc()) \
-    .write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_year")
-
-print("✅ Todo listo. Dimensiones generadas usando columnas: gp_name, circuit, city.")
+print("Gold Environment Ready: Analytical libraries loaded.")
 
 # METADATA ********************
 
@@ -124,191 +46,18 @@ print("✅ Todo listo. Dimensiones generadas usando columnas: gp_name, circuit, 
 
 # CELL ********************
 
-# --- CELL: FACT DRIVER (FIX FINAL - INDENTATION FIXED) ---
-from pyspark.sql.window import Window
-from pyspark.sql.functions import col, lag, concat, lit, max as _max, when
+# --- CELL 1: GOLD DIM DRIVER ---
 
-print("🏗️ Generando Facts corrigiendo el salto de equipo (Bearman)...")
+# Config
+TABLE_NAME = "gold_dim_driver"
 
-# 1. CARGA Y LIMPIEZA
-df_standings_raw = spark.table("silver_drivers_standings")
+print(f"Building {TABLE_NAME}...")
 
-# Limpiamos duplicados por meeting
-df_standings_clean = df_standings_raw \
-    .groupBy("driver_number", "year", "meeting_key") \
-    .agg(_max("points").alias("points"), _max("position").alias("position")) \
-    .select("driver_number", "year", "meeting_key", "points", "position")
-
-df_circuits = spark.table("silver_circuits")
-df_drivers = spark.table("silver_drivers") 
-
-# 2. JOINS
-df_joined = df_standings_clean.alias("f") \
-    .join(df_circuits.alias("c"), col("f.meeting_key") == col("c.meeting_key")) \
-    .join(df_drivers.alias("d"), 
-          (col("f.driver_number") == col("d.driver_number")) & 
-          (col("f.year") == col("d.year")), 
-          "left")
-
-# 3. CÁLCULO DELTA (FIX 🛠️)
-# Agrupamos por NOMBRE COMPLETO para conectar Ferrari con Haas
-w_diff = Window.partitionBy("d.full_name", "f.year").orderBy("c.date_start")
-
-df_fact_driver = df_joined \
-    .withColumn("prev_points", lag("f.points", 1, 0.0).over(w_diff)) \
-    .withColumn("Race_Points", (col("f.points") - col("prev_points")).cast("float")) \
-    .withColumn("Driver_Key", (col("f.year") * 10000 + col("f.driver_number")).cast("long")) \
-    .withColumn("Team_ID", concat(col("d.team_name"), lit("-"), col("f.year"))) \
-    .select(
-        col("Driver_Key"),
-        col("Team_ID"),
-        col("c.meeting_key"),
-        col("f.year").alias("Year"),
-        col("f.driver_number"),
-        
-        # Evitar negativos
-        when(col("Race_Points") < 0, 0).otherwise(col("Race_Points")).alias("Race_Points"),
-        
-        col("f.points").alias("Season_Points"),
-        col("f.position").alias("World_Position")
-    )
-
-# Guardar
-df_fact_driver.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_fact_driver_results")
-
-print("✅ Fact Table arreglada sin errores de indentación.")
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-# --- CELL: FACT TEAM RESULTS (USANDO RANKING OFICIAL) ---
-from pyspark.sql.window import Window
-from pyspark.sql.functions import col, lag, concat, lit
-
-print("🏗️ Generando Fact Teams usando 'position' oficial de la API...")
-
-# 1. Cargar tablas
-#    silver_teams_standings ya tiene el acumulado y la posición oficial
-df_t_standings = spark.table("silver_teams_standings") 
-df_circuits = spark.table("silver_circuits")
-
-# 2. Join con Circuitos para tener fechas y keys
-df_joined_t = df_t_standings.alias("f") \
-    .join(df_circuits.alias("c"), col("f.meeting_key") == col("c.meeting_key"))
-
-# 3. Ventana SOLO para calcular los puntos de la carrera (Race_Points)
-#    Restamos los puntos de esta carrera menos los de la anterior para saber cuánto ganaron hoy.
-w_diff_t = Window.partitionBy("f.team_name", "f.year").orderBy("c.date_start")
-
-df_fact_team = df_joined_t \
-    .withColumn("Team_ID", concat(col("f.team_name"), lit("-"), col("f.year"))) \
-    .withColumn("prev_points", lag("f.points", 1, 0).over(w_diff_t)) \
-    .withColumn("Race_Points", (col("f.points") - col("prev_points")).cast("float")) \
-    .select(
-        col("Team_ID"),
-        col("c.meeting_key"),
-        col("f.year").alias("Year"),
-        
-        # --- LOS DATOS CLAVE ---
-        col("Race_Points"),                          # Puntos del día (calculado)
-        col("f.points").alias("Season_Points"),      # Puntos acumulados (API)
-        col("f.position").alias("World_Position")    # <--- RANKING OFICIAL (API)
-    )
-
-df_fact_team.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_fact_team_results")
-
-print("✅ Fact Teams actualizada. Ranking de Constructores listo.")
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-# --- CELL: GOLD UI TIMELINE (CON MEETING KEY PARA RELACIÓN LIMPIA) ---
-from pyspark.sql.functions import col
-
-print("🏗️ Generando Tabla Auxiliar UI con MEETING KEY...")
-
-# 1. Leemos silver_circuits (o gold_dim_race / gold_fact_driver_results)
-# Lo ideal es leer de la misma fuente que usaste para gold_dim_race para asegurar consistencia
-df_source = spark.table("silver_circuits") 
-
-# 2. Seleccionamos Fecha, GP y la LLAVE
-df_timeline = df_source \
-    .select(
-        col("date_start").alias("Date"), 
-        col("gp_name"),
-        col("meeting_key").cast("int").alias("meeting_key"), # <--- ¡LA LLAVE MAESTRA!
-        col("year").cast("int").alias("Year") # Opcional, pero útil para validar visualmente
-    ) \
-    .distinct() \
-    .orderBy("Date")
-
-# 3. Guardamos
-df_timeline.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_ui_play_timeline")
-
-print("✅ Tabla 'gold_ui_play_timeline' actualizada con meeting_key.")
-display(df_timeline)
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-# --- CELL: FIX DRIVER GROUPING (Solución para Matriz) ---
-from pyspark.sql.functions import col, trim
-
-print("🏗️ Añadiendo columna de agrupación a 'gold_dim_driver'...")
-
-# 1. Leemos la tabla original
-df_driver = spark.table("gold_dim_driver")
-
-# 2. Creamos la columna nueva (Copia exacta del nombre para agrupar)
-# Usamos trim() por seguridad para quitar espacios invisibles
-df_driver = df_driver.withColumn("Driver_Grouping_Name", trim(col("Driver")))
-
-# 3. Guardamos (Sobrescribiendo la tabla Gold)
-df_driver.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_driver")
-
-print("✅ Tabla 'gold_dim_driver' actualizada.")
-print("   - Ahora tienes 'Driver_Grouping_Name' disponible.")
-print("   - Ve a Power BI y dale a 'Actualizar' (Refresh).")
-display(df_driver)
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-# --- CELL: GOLD DIM DRIVER (FIX FINAL - ÚLTIMO RANKING) ---
-from pyspark.sql.window import Window
-from pyspark.sql.functions import col, row_number
-
-print("🏗️ Generando Dim Driver con el RANKING FINAL (Última carrera)...")
-
-# 1. Preparar datos: Unimos Standings con Drivers para tener Nombres y Fechas (meeting_key)
+# 1. Sources
 df_drivers = spark.table("silver_drivers")
 df_standings = spark.table("silver_drivers_standings")
 
-# Hacemos join para tener (Nombre, Año, Meeting_Key, Posición)
+# 2. Join to get Driver + Results
 df_joined = df_drivers.alias("d") \
     .join(df_standings.alias("s"), 
           (col("d.driver_number") == col("s.driver_number")) & 
@@ -321,9 +70,7 @@ df_joined = df_drivers.alias("d") \
         col("s.position").cast("int").alias("rank_in_race")
     )
 
-# 2. ⭐️ LA LÓGICA CLAVE: Buscar el ranking de la ÚLTIMA carrera ⭐️
-#    Para cada Persona (Nombre) y Año, ordenamos por carrera (meeting_key) DESCENDENTE.
-#    El primero que salga (rn=1) es su estado final de temporada.
+# 3. KEY LOGIC
 w_last_status = Window.partitionBy("full_name", "year").orderBy(col("meeting_key").desc())
 
 df_final_ranks = df_joined \
@@ -332,10 +79,10 @@ df_final_ranks = df_joined \
     .select(
         col("full_name"), 
         col("year"), 
-        col("rank_in_race").alias("Final_Season_Rank") # Este será el 18 para Bearman
+        col("rank_in_race").alias("Final_Season_Rank") 
     )
 
-# 3. Pegar este ranking "Correcto" a la tabla final de Drivers
+# 4. Final Assembly
 df_final = spark.table("silver_drivers").alias("d") \
     .join(df_final_ranks.alias("r"), 
           (col("d.full_name") == col("r.full_name")) & 
@@ -349,16 +96,264 @@ df_final = spark.table("silver_drivers").alias("d") \
         col("d.full_name").alias("Driver"),
         col("d.headshot_url").alias("Driver_Photo"),
         col("d.country_code").alias("Driver_Country"),
-        col("r.Final_Season_Rank").alias("Season_Rank_Sort") # <--- AHORA SÍ: El rank final real
+        col("r.Final_Season_Rank").alias("Season_Rank_Sort") 
     ) \
     .dropDuplicates(["Driver_Key"])
 
-# 4. Guardar
-df_final.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_dim_driver")
+# 5. Write
+df_final.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
 
-print("✅ Dimensión corregida.")
-print("   - Oliver Bearman ahora tendrá Season_Rank_Sort = 18 en ambas filas.")
-display(df_final.filter("Number = 38 OR Number = 50"))
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 2: GOLD DIM TEAM ---
+
+# Config
+TABLE_NAME = "gold_dim_team"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. Sources
+df_teams_silver = spark.table("silver_teams") 
+df_drivers = spark.table("silver_drivers")
+
+# 2. Get Unique Color per Team/Year
+df_colors = df_drivers \
+    .where(col("team_name").isNotNull()) \
+    .groupBy("team_name", "year") \
+    .agg(_max("team_colour").alias("Hex_Color")) 
+
+# 3. Join and Final Selection
+df_gold_team = df_teams_silver.alias("t") \
+    .join(df_colors.alias("c"), 
+          (col("t.team_name") == col("c.team_name")) & 
+          (col("t.year") == col("c.year")), 
+          "left") \
+    .select(
+        concat(trim(col("t.team_name")), lit("-"), col("t.year")).alias("Team_Key"),
+        trim(col("t.team_name")).alias("Team"),
+        col("t.year").alias("Year"),
+        col("t.team_logo_url").alias("Team_Logo"),
+        when(col("c.Hex_Color").isNull(), "#999999").otherwise(col("c.Hex_Color")).alias("Hex_Color")
+    ) \
+    .dropDuplicates(["Team_Key"])
+
+# 4. Write
+df_gold_team.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 3: GOLD DIM RACE ---
+
+# Config
+TABLE_NAME = "gold_dim_race"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. Source
+df_circuits = spark.table("silver_circuits")
+
+# 2. Generate Visual Codes logic
+df_pre = df_circuits.withColumn("Default_Code", upper(substring(col("gp_name"), 1, 3)))
+w_conflict = Window.partitionBy("Default_Code")
+df_calculated = df_pre.withColumn("Distinct_GPs", size(collect_set("gp_name").over(w_conflict)))
+
+# 3. Create Dimension
+df_gold_race = df_calculated \
+    .withColumn("GP_Display", 
+        when(col("Distinct_GPs") > 1, 
+             upper(substring(col("circuit"), 1, 3)))
+        .otherwise(col("Default_Code"))
+    ) \
+    .select(
+        col("meeting_key").alias("Race_Key"),   
+        col("year").alias("Year"),               
+        col("gp_name").alias("Grand_Prix"),      
+        col("circuit").alias("Circuit_Name"),    
+        col("GP_Display"),                       
+        col("date_start").alias("Date"),         
+    ).distinct()
+
+# 4. Write
+df_gold_race.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 4: GOLD FACT DRIVER RESULTS ---
+
+# Config
+TABLE_NAME = "gold_fact_driver_results"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. Sources
+df_standings_raw = spark.table("silver_drivers_standings")
+df_circuits = spark.table("silver_circuits")
+df_drivers = spark.table("silver_drivers") 
+
+# 2. Pre-processing
+df_standings_clean = df_standings_raw \
+    .groupBy("driver_number", "year", "meeting_key") \
+    .agg(_max("points").alias("points"), _max("position").alias("position")) \
+    .select("driver_number", "year", "meeting_key", "points", "position")
+
+# 3. Joins
+df_joined = df_standings_clean.alias("f") \
+    .join(df_circuits.alias("c"), col("f.meeting_key") == col("c.meeting_key")) \
+    .join(df_drivers.alias("d"), 
+          (col("f.driver_number") == col("d.driver_number")) & 
+          (col("f.year") == col("d.year")), 
+          "left")
+
+# 4. DELTA CALCULATION LOGIC
+w_diff = Window.partitionBy("d.full_name", "f.year").orderBy("c.date_start")
+
+df_fact_driver = df_joined \
+    .withColumn("prev_points", lag("f.points", 1, 0.0).over(w_diff)) \
+    .withColumn("Race_Points", (col("f.points") - col("prev_points")).cast("float")) \
+    .withColumn("Driver_Key", (col("f.year") * 10000 + col("f.driver_number")).cast("long")) \
+    .withColumn("Team_Key", concat(col("d.team_name"), lit("-"), col("f.year"))) \
+    .select(
+        col("Driver_Key"),
+        col("Team_Key"),
+        col("c.meeting_key").alias("Race_Key"),
+        when(col("Race_Points") < 0, 0).otherwise(col("Race_Points")).alias("Race_Points"),
+        col("f.points").alias("Season_Points"),
+        col("f.position").alias("World_Position")
+    )
+
+# 5. Write
+df_fact_driver.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 5: GOLD FACT TEAM RESULTS ---
+
+# Config
+TABLE_NAME = "gold_fact_team_results"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. Sources
+df_t_standings = spark.table("silver_teams_standings") 
+df_circuits = spark.table("silver_circuits")
+
+# 2. Join with Circuits for Dates
+df_joined_t = df_t_standings.alias("f") \
+    .join(df_circuits.alias("c"), col("f.meeting_key") == col("c.meeting_key"))
+
+# 3. WINDOW DEFINITIONS
+w_fix_drop = Window.partitionBy("f.team_name", "f.year") \
+                   .orderBy("c.date_start") \
+                   .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+#    B. Diff Window
+w_diff_t = Window.partitionBy("f.team_name", "f.year").orderBy("c.date_start")
+
+# 4. TRANSFORMATION
+df_fact_team = df_joined_t \
+    .withColumn("Team_Key", concat(col("f.team_name"), lit("-"), col("f.year"))) \
+    .withColumn("Season_Points_Fixed", _max("f.points").over(w_fix_drop)) \
+    .withColumn("prev_points", lag("Season_Points_Fixed", 1, 0).over(w_diff_t)) \
+    .withColumn("Race_Points", (col("Season_Points_Fixed") - col("prev_points")).cast("float")) \
+    .select(
+        col("Team_Key"),
+        col("c.meeting_key").alias("Race_Key"),
+        when(col("Race_Points") < 0, 0).otherwise(col("Race_Points")).alias("Race_Points"),
+        col("Season_Points_Fixed").alias("Season_Points"),
+        col("f.position").alias("World_Position")
+    )
+
+# 5. Write
+df_fact_team.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 6: GOLD UI PLAY TIMELINE ---
+
+# Config
+TABLE_NAME = "gold_ui_play_timeline"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. Source
+df_source = spark.table("silver_circuits") 
+
+# 2. Selection
+df_timeline = df_source \
+    .select(
+        col("date_start").alias("Date"), 
+        col("meeting_key").cast("int").alias("Race_Key"),
+    ) \
+    .distinct() \
+    .orderBy("Date")
+
+# 3. Write
+df_timeline.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
 
 # METADATA ********************
 

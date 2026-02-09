@@ -1,24 +1,24 @@
-relationship c65b0c80-79c4-39e7-32d2-1f3d8d64b06c
-	fromColumn: gold_fact_team_results.'Team ID'
-	toColumn: gold_dim_team.'Team ID'
-
-relationship 4e912deb-83b8-4e54-79b7-7fa34e2f11c3
-	fromColumn: gold_fact_driver_results.meeting_key
-	toColumn: gold_dim_race.meeting_key
-
-relationship bff76f39-5a55-86e5-aa69-a25648a81bb4
-	fromColumn: gold_fact_team_results.meeting_key
-	toColumn: gold_dim_race.meeting_key
-
-relationship 96e348ae-5c3d-6d0c-43d6-21bde1d21a5e
-	fromColumn: gold_fact_driver_results.'Team ID'
-	toColumn: gold_dim_team.'Team ID'
-
-relationship fd78d55c-8ee3-a241-001b-f91baf256148
-	fromColumn: gold_ui_play_timeline.meeting_key
-	toColumn: gold_dim_race.meeting_key
-
 relationship 2e4362aa-b46b-fbf7-c6f2-de8918241cd6
 	fromColumn: gold_fact_driver_results.Driver_Key
 	toColumn: gold_dim_driver.Driver_Key
+
+relationship a1414b99-5fe9-1bbd-17ba-09b70b4fab95
+	fromColumn: gold_fact_driver_results.Race_Key
+	toColumn: gold_dim_race.Race_Key
+
+relationship 7008f0e7-c7d7-d0f9-0bd2-5fe86c8498d0
+	fromColumn: gold_fact_team_results.Race_Key
+	toColumn: gold_dim_race.Race_Key
+
+relationship 76520d05-4ca2-c74e-2758-9b9574b2ae45
+	fromColumn: gold_ui_play_timeline.Race_Key
+	toColumn: gold_dim_race.Race_Key
+
+relationship e3887ba4-09f2-6bdf-1d1d-5d5031c1f030
+	fromColumn: gold_fact_driver_results.Team_Key
+	toColumn: gold_dim_team.Team_Key
+
+relationship 06967fb9-81ea-80e9-41c5-eb02bf0c741f
+	fromColumn: gold_fact_team_results.Team_Key
+	toColumn: gold_dim_team.Team_Key
 

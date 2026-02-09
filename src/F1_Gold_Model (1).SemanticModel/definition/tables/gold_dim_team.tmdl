@@ -2,7 +2,7 @@ table gold_dim_team
 	lineageTag: 521775d5-88d9-4d42-8017-01d21a6f518b
 	sourceLineageTag: [dbo].[gold_dim_team]
 
-	measure 'Team Color Hex' = MAX('gold_dim_team'[Hex Color])
+	measure Team_Color_Hex = MAX('gold_dim_team'[Hex_Color])
 		lineageTag: f503e8a1-f6f8-44cb-b2be-a93a4ef5217b
 
 		changedProperty = Name
@@ -17,7 +17,7 @@ table gold_dim_team
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Team Logo'
+	column Team_Logo
 		dataType: string
 		sourceProviderType: varchar(8000)
 		lineageTag: 0437da62-9336-4d91-9774-01a363193b76
@@ -26,13 +26,11 @@ table gold_dim_team
 		summarizeBy: none
 		sourceColumn: Team_Logo
 
-		changedProperty = Name
-
 		changedProperty = DataCategory
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Hex Color'
+	column Hex_Color
 		dataType: string
 		isHidden
 		sourceProviderType: varchar(8000)
@@ -40,23 +38,6 @@ table gold_dim_team
 		sourceLineageTag: Hex_Color
 		summarizeBy: none
 		sourceColumn: Hex_Color
-
-		changedProperty = Name
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
-
-	column 'Team ID'
-		dataType: string
-		isHidden
-		sourceProviderType: varchar(8000)
-		lineageTag: a90ec70e-23a5-4470-a96c-6fb062caaf41
-		sourceLineageTag: Team_ID
-		summarizeBy: none
-		sourceColumn: Team_ID
-
-		changedProperty = Name
 
 		changedProperty = IsHidden
 
@@ -77,6 +58,19 @@ table gold_dim_team
 		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = User
+
+	column Team_Key
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 41e72dab-ddaa-40ec-8c37-d9a9bf2a387f
+		sourceLineageTag: Team_Key
+		summarizeBy: none
+		sourceColumn: Team_Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
 
 	partition gold_dim_team = entity
 		mode: directLake

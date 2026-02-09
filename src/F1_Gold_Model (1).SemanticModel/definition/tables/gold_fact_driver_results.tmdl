@@ -2,13 +2,13 @@ table gold_fact_driver_results
 	lineageTag: 330adf25-33fe-4187-a313-8246f31e3beb
 	sourceLineageTag: [dbo].[gold_fact_driver_results]
 
-	measure 'Driver Rank Standings' = ```
+	measure Driver_Ranks = ```
 			
-			VAR UltimoMeeting = MAX(gold_fact_driver_results[meeting_key])
+			VAR UltimoMeeting = MAX(gold_fact_driver_results[Race_Key])
 			RETURN 
 			CALCULATE(
 			    MAX(gold_fact_driver_results[World_Position]),
-			    gold_fact_driver_results[meeting_key] = UltimoMeeting
+			    gold_fact_driver_results[Race_Key] = UltimoMeeting
 			)
 			```
 		formatString: 0
@@ -16,37 +16,34 @@ table gold_fact_driver_results
 
 		changedProperty = Name
 
-	measure Equipo_Actual_Logo = ```
+	measure Actual_Team_Logo = ```
 			
 			VAR FechaCorte = MAX('gold_ui_play_timeline'[Date])
-			VAR AnioActual = SELECTEDVALUE('gold_dim_race'[Year]) // Captura el año del visual o filtro
+			VAR AnioActual = SELECTEDVALUE('gold_dim_race'[Year])
 			
-			// 1. Buscamos el último meeting del piloto PERO solo del año actual
 			VAR UltimoMeetingDelPiloto = 
 			    CALCULATE(
-			        MAX(gold_fact_driver_results[meeting_key]),
+			        MAX(gold_fact_driver_results[Race_Key]),
 			        'gold_dim_race'[Date] <= FechaCorte,
 			        'gold_dim_race'[Year] = AnioActual, 
-			        REMOVEFILTERS('gold_dim_race'[Date]) // Quitamos solo el filtro de fecha específica
+			        REMOVEFILTERS('gold_dim_race'[Date]) 
 			    )
 			
-			// 2. Recuperamos el ID del equipo en ese momento y año
 			VAR TeamID_EnEseMomento = 
 			    CALCULATE(
-			        MAX(gold_fact_driver_results[Team ID]),
-			        gold_fact_driver_results[meeting_key] = UltimoMeetingDelPiloto,
+			        MAX(gold_fact_driver_results[Team_Key]),
+			        gold_fact_driver_results[Race_Key] = UltimoMeetingDelPiloto,
 			        'gold_dim_race'[Year] = AnioActual,
 			        REMOVEFILTERS('gold_dim_race'[Date])
 			    )
 			
-			// 3. Devolvemos el logo (Solo si hay un meeting encontrado)
 			RETURN
 			    IF(
 			        ISBLANK(UltimoMeetingDelPiloto),
 			        BLANK(),
 			        CALCULATE(
-			            MAX(gold_dim_team[Team Logo]),
-			            gold_dim_team[Team ID] = TeamID_EnEseMomento
+			            MAX(gold_dim_team[Team_Logo]),
+			            gold_dim_team[Team_Key] = TeamID_EnEseMomento
 			        )
 			    )
 			```
@@ -56,39 +53,6 @@ table gold_fact_driver_results
 		changedProperty = Name
 
 		changedProperty = DataCategory
-
-	column Year
-		dataType: int64
-		isHidden
-		formatString: 0
-		sourceProviderType: int
-		lineageTag: d749345d-076c-45fb-98e1-6a827a705dd3
-		sourceLineageTag: Year
-		summarizeBy: none
-		sourceColumn: Year
-
-		changedProperty = SummarizeBy
-
-		changedProperty = FormatString
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = User
-
-	column 'Team ID'
-		dataType: string
-		isHidden
-		sourceProviderType: varchar(8000)
-		lineageTag: abadd6f0-bb00-46f3-98bc-19a8d7a98867
-		sourceLineageTag: Team_ID
-		summarizeBy: none
-		sourceColumn: Team_ID
-
-		changedProperty = Name
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
 
 	column Race_Points
 		dataType: double
@@ -137,38 +101,6 @@ table gold_fact_driver_results
 
 		annotation SummarizationSetBy = User
 
-	column meeting_key
-		dataType: int64
-		isHidden
-		formatString: 0
-		sourceProviderType: bigint
-		lineageTag: 430f1358-fd86-4c47-bc0f-a065c76dabdc
-		sourceLineageTag: meeting_key
-		summarizeBy: none
-		sourceColumn: meeting_key
-
-		changedProperty = SummarizeBy
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = User
-
-	column driver_number
-		dataType: int64
-		isHidden
-		formatString: 0
-		sourceProviderType: int
-		lineageTag: 158a1ffd-f875-4ede-bbb6-e7d5890df9e3
-		sourceLineageTag: driver_number
-		summarizeBy: none
-		sourceColumn: driver_number
-
-		changedProperty = SummarizeBy
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = User
-
 	column Driver_Key
 		dataType: int64
 		isHidden
@@ -184,6 +116,35 @@ table gold_fact_driver_results
 		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = User
+
+	column Race_Key
+		dataType: int64
+		isHidden
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 9241ff1b-973a-4f6f-a957-4329c8b1127b
+		sourceLineageTag: Race_Key
+		summarizeBy: none
+		sourceColumn: Race_Key
+
+		changedProperty = SummarizeBy
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = User
+
+	column Team_Key
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: b06cf934-85eb-4ba2-b86e-2631b41f6939
+		sourceLineageTag: Team_Key
+		summarizeBy: none
+		sourceColumn: Team_Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
 
 	partition gold_fact_driver_results = entity
 		mode: directLake

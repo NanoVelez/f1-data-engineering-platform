@@ -2,17 +2,13 @@ table gold_fact_team_results
 	lineageTag: 2bf5b417-fe98-4904-807d-8771244f6d17
 	sourceLineageTag: [dbo].[gold_fact_team_results]
 
-	measure Puntos_Ranking_Animado = ```
+	measure Team_Points = ```
 			
-			VAR Fecha_Corte = MAX('gold_ui_play_timeline'[Date]) // La fecha del Play Axis
+			VAR Fecha_Corte = MAX('gold_ui_play_timeline'[Date])
 			
 			RETURN
 			    CALCULATE(
-			        // 1. Buscamos el valor acumulado máximo
 			        MAX(gold_fact_team_results[Season_Points]), 
-			        
-			        // 2. FILTRO MÁGICO: Obligamos a Power BI a mirar solo el pasado
-			        // "Filtra la tabla de hechos para que solo entren carreras anteriores al corte"
 			        gold_dim_race[Date] <= Fecha_Corte
 			    )
 			```
@@ -22,22 +18,17 @@ table gold_fact_team_results
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
-	measure Ranking_Oficial_Final = ```
+	measure Team_Ranks = ```
 			
-			// 1. CAPTURAR LA FECHA DEL PLAY AXIS
 			VAR FechaPlay = MAX('gold_ui_play_timeline'[Date])
 			VAR HayJuego = ISFILTERED('gold_ui_play_timeline')
 			
-			// 2. BUSCAR LA ÚLTIMA FECHA REAL CON DATOS (El Freno de Mano) 🛑
 			VAR UltimaFechaConDatos = 
 			    CALCULATE(
 			        MAX(gold_dim_race[Date]),
-			        // Solo miramos fechas donde realmente hubo carreras con resultados
-			        NOT(ISBLANK(gold_fact_team_results[meeting_key]))
+			        NOT(ISBLANK(gold_fact_team_results[Race_Key]))
 			    )
 			
-			// 3. DECIDIR LA FECHA DE CORTE (Clamping)
-			// Si el Play Axis se va al futuro, nos quedamos en la última carrera real.
 			VAR FechaCorte = 
 			    IF(
 			        HayJuego, 
@@ -45,58 +36,23 @@ table gold_fact_team_results
 			        UltimaFechaConDatos
 			    )
 			
-			// 4. LÓGICA DE RECUPERACIÓN (Sin Coalesce)
 			VAR UltimoMeetingValido = 
 			    CALCULATE(
-			        MAX(gold_fact_team_results[meeting_key]),
+			        MAX(gold_fact_team_results[Race_Key]),
 			        REMOVEFILTERS(gold_dim_race),
 			        gold_dim_race[Date] <= FechaCorte
 			    )
 			
 			RETURN
-			    // 5. DEVUELVE LA POSICIÓN LIMPIA
 			    CALCULATE(
 			        MAX(gold_fact_team_results[World_Position]),
-			        gold_fact_team_results[meeting_key] = UltimoMeetingValido
+			        gold_fact_team_results[Race_Key] = UltimoMeetingValido
 			    )
 			```
 		formatString: 0
 		lineageTag: 51edf90a-3a56-49d3-8283-cb5977a22cdf
 
 		changedProperty = Name
-
-	column Year
-		dataType: int64
-		isHidden
-		formatString: 0
-		sourceProviderType: int
-		lineageTag: 2f4e6dcb-3d9f-4227-9472-2d62c403275a
-		sourceLineageTag: Year
-		summarizeBy: none
-		sourceColumn: Year
-
-		changedProperty = SummarizeBy
-
-		changedProperty = FormatString
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = User
-
-	column 'Team ID'
-		dataType: string
-		isHidden
-		sourceProviderType: varchar(8000)
-		lineageTag: b23e3229-bfe3-4352-b736-c5327172e1b7
-		sourceLineageTag: Team_ID
-		summarizeBy: none
-		sourceColumn: Team_ID
-
-		changedProperty = Name
-
-		changedProperty = IsHidden
-
-		annotation SummarizationSetBy = Automatic
 
 	column Race_Points
 		dataType: double
@@ -145,21 +101,34 @@ table gold_fact_team_results
 
 		annotation SummarizationSetBy = User
 
-	column meeting_key
+	column Race_Key
 		dataType: int64
 		isHidden
 		formatString: 0
 		sourceProviderType: bigint
-		lineageTag: 35640240-2bbd-4c95-be11-7adacbfb4c2f
-		sourceLineageTag: meeting_key
+		lineageTag: a36c6bff-7062-4a80-8233-05c7be6509f0
+		sourceLineageTag: Race_Key
 		summarizeBy: none
-		sourceColumn: meeting_key
+		sourceColumn: Race_Key
 
 		changedProperty = SummarizeBy
 
 		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = User
+
+	column Team_Key
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: 75f5c32a-7dd2-4d71-ab5a-121d0802e4c0
+		sourceLineageTag: Team_Key
+		summarizeBy: none
+		sourceColumn: Team_Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
 
 	partition gold_fact_team_results = entity
 		mode: directLake

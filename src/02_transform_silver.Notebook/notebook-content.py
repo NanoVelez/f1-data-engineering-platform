@@ -22,25 +22,42 @@
 
 # CELL ********************
 
-# --- CELL 1: DRIVERS STANDINGS TRANSFORMATION (SCALABLE) ---
+# --- CELL 0: GLOBAL SETUP & IMPORTS ---
+from pyspark.sql.functions import (
+    col, lit, when, concat, split, element_at, 
+    input_file_name, regexp_extract, regexp_replace, 
+    current_timestamp, max as _max
+)
+from pyspark.sql.window import Window 
 
-from pyspark.sql.functions import input_file_name, col, split, element_at, current_timestamp, lit
+PATH_BRONZE = "Files/bronze/"
+PATH_SILVER = "Files/silver/" 
+
+print("CONFIG READY.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 1: SILVER DRIVERS STANDINGS ---
 
 # --- CONFIGURATION ---
-INPUT_PATH_ROOT = "Files/bronze/"
 TABLE_NAME = "silver_drivers_standings"
 
-# --- 1. READ ---
-print(f"Reading ALL Drivers Standings files recursively...")
+print(f"Building {TABLE_NAME}...")
 
+# --- 1. READ ---
 df_raw = spark.read \
     .option("recursiveFileLookup", "true") \
     .option("pathGlobFilter", "drivers_standings.json") \
-    .json(INPUT_PATH_ROOT)
+    .json(PATH_BRONZE)
 
 # --- 2. TRANSFORMATION ---
-print("Mapping columns and Extracting Year/Race...")
-
 df_silver = df_raw.select(
     # A. Business Columns 
     col("position_current").cast("int").alias("position"),  
@@ -66,7 +83,7 @@ df_silver.write \
     .partitionBy("year") \
     .saveAsTable(TABLE_NAME)
 
-print(f"Drivers Standings table created! Total rows: {df_silver.count()}")
+print(f"{TABLE_NAME} CREATED.")
 
 # METADATA ********************
 
@@ -77,49 +94,38 @@ print(f"Drivers Standings table created! Total rows: {df_silver.count()}")
 
 # CELL ********************
 
-# --- CELL 2: SILVER TEAMS STANDINGS (UPDATE) ---
-from pyspark.sql.functions import col, split, element_at, current_timestamp, lit, regexp_replace, input_file_name, concat
+# --- CELL 2: SILVER TEAMS STANDINGS ---
 
 # --- CONFIGURATION ---
-INPUT_PATH_ROOT = "Files/bronze/"
-TABLE_NAME_TEAMS = "silver_teams_standings"
-GITHUB_ASSETS_URL = "https://raw.githubusercontent.com/NanoVelez/f1-fabric-proyect/main/assets/teams/"
+TABLE_NAME = "silver_teams_standings"
 
-# --- 1. READ ---
-df_teams_raw = spark.read \
+print(f"Building {TABLE_NAME}...")
+
+# 1. READ & TRANSFORM
+df_silver = spark.read \
     .option("recursiveFileLookup", "true") \
     .option("pathGlobFilter", "teams_standings.json") \
-    .json(INPUT_PATH_ROOT)
+    .json(PATH_BRONZE) \
+    .select(
+        col("meeting_key").cast("long"),
+        col("team_name"), 
+        col("position_current").cast("int").alias("position"),
+        col("points_current").cast("float").alias("points"),
+        
+        # Metadata
+        element_at(split(input_file_name(), "/"), -3).cast("int").alias("year"),
+        current_timestamp().alias("ingestion_date")
+    ).na.drop(subset=["team_name", "position"])
 
-# --- 2. TRANSFORMATION ---
-df_teams_silver = df_teams_raw.select(
-    col("position_current").cast("int").alias("position"),
-    col("points_current").cast("float").alias("points"),
-    col("team_name"),
-    col("meeting_key").cast("long"), 
-
-    # Data Engineering
-    element_at(split(input_file_name(), "/"), -2).alias("race_folder_name"),
-    element_at(split(input_file_name(), "/"), -3).cast("int").alias("year"),
-    current_timestamp().alias("ingestion_date")
-).withColumn(
-    "team_logo_url", 
-    concat(
-        lit(GITHUB_ASSETS_URL), 
-        regexp_replace(col("team_name"), " ", "%20"), 
-        lit(".png")
-    )
-).na.drop(subset=["team_name", "position"])
-
-# --- 3. WRITE ---
-df_teams_silver.write \
+# 2. WRITE
+df_silver.write \
     .mode("overwrite") \
     .option("overwriteSchema", "true") \
     .format("delta") \
     .partitionBy("year") \
-    .saveAsTable(TABLE_NAME_TEAMS)
+    .saveAsTable(TABLE_NAME)
 
-print("Silver Teams")
+print(f"{TABLE_NAME} CREATED.")
 
 # METADATA ********************
 
@@ -130,33 +136,29 @@ print("Silver Teams")
 
 # CELL ********************
 
-# --- CELL 3: CIRCUITS TRANSFORMATION (ROBUST) ---
-from pyspark.sql.functions import col, current_timestamp
+# --- CELL 3: SILVER CIRCUITS ---
 
 # --- CONFIGURATION ---
-INPUT_PATH_ROOT = "Files/bronze/"
-TABLE_NAME_CIRCUITS = "silver_circuits"
+TABLE_NAME = "silver_circuits"
+
+print(f"Building {TABLE_NAME}...")
 
 # --- 1. READ ---
-print(f"Reading Circuits recursively...")
 df_circuits_raw = spark.read \
     .option("recursiveFileLookup", "true") \
     .option("pathGlobFilter", "circuits.json") \
-    .json(INPUT_PATH_ROOT)
+    .json(PATH_BRONZE)
 
 # --- 2. TRANSFORMATION ---
-print("Transforming Circuits data...")
-
-# Filtramos los test de pretemporada
 df_filtered = df_circuits_raw.filter(~col("meeting_name").contains("Testing"))
 
 df_circuits_silver = df_filtered.select(
     col("meeting_key").cast("long"),
-    col("circuit_key").cast("long"),       # <--- AÑADIDO: Clave fuerte para joins
+    col("circuit_key").cast("long"),       
     col("meeting_name").alias("gp_name"),
     col("location").alias("city"),
     col("country_name").alias("country"),
-    col("country_code").alias("gp_code"),  # <--- AÑADIDO: El código de 3 letras (USA, ESP)
+    col("country_code").alias("gp_code"),  
     col("circuit_short_name").alias("circuit"),
     col("date_start").cast("timestamp"),
     col("year").cast("int"),
@@ -164,16 +166,16 @@ df_circuits_silver = df_filtered.select(
 )
 
 # --- 3. WRITE ---
-print(f"Saving Delta table: {TABLE_NAME_CIRCUITS}...")
+print(f"Saving Delta table: {TABLE_NAME}...")
 
 df_circuits_silver.orderBy("date_start") \
     .write \
     .mode("overwrite") \
     .option("overwriteSchema", "true") \
     .format("delta") \
-    .saveAsTable(TABLE_NAME_CIRCUITS)
+    .saveAsTable(TABLE_NAME)
 
-print("✅ Circuits table created successfully with NEW columns!")
+print(f"{TABLE_NAME} CREATED.")
 
 # METADATA ********************
 
@@ -184,58 +186,94 @@ print("✅ Circuits table created successfully with NEW columns!")
 
 # CELL ********************
 
-# --- CELL 4: DRIVERS DIMENSION (FIXED) ---
+# --- CELL 4: SILVER DRIVERS ---
 
-# --- CONFIGURATION ---
-INPUT_PATH = "Files/bronze/" 
-TABLE_NAME_DRIVERS = "silver_drivers"
-DEFAULT_PHOTO_URL = "https://github.com/NanoVelez/f1-fabric-proyect/blob/main/assets/generic_man_silhouette.png?raw=true"
+# CONFIG
+TABLE_NAME = "silver_drivers"
+DEFAULT_PHOTO = "https://github.com/NanoVelez/f1-fabric-proyect/blob/main/assets/generic_man_silhouette.png?raw=true"
 
-# --- 1. READ ---
-print(f"Reading ALL Drivers catalogs...")
+print(f"Building {TABLE_NAME}...")
 
-df_drivers_raw = spark.read \
+# 1. READ & TRANSFORM
+df_drivers_silver = spark.read \
     .option("recursiveFileLookup", "true") \
     .option("pathGlobFilter", "drivers.json") \
-    .json(INPUT_PATH)
+    .json(PATH_BRONZE) \
+    .withColumn("year", regexp_extract(input_file_name(), r"bronze/(\d{4})/", 1).cast("int")) \
+    .select(
+        col("driver_number").cast("int"),
+        col("full_name"),
+        col("name_acronym"),
+        col("team_name"),       
+        col("country_code"),
+        col("year"),
+        
+        when((col("headshot_url").isNull()) | (col("headshot_url") == ""), lit(DEFAULT_PHOTO))
+        .otherwise(col("headshot_url")).alias("headshot_url"),
 
-# --- 2. TRANSFORMATION ---
-print("Creating drivers history list with COLORS...")
+        when((col("team_colour").isNull()) | (col("team_colour") == ""), lit("#999999"))
+        .otherwise(concat(lit("#"), col("team_colour"))).alias("team_colour"),
+        
+        current_timestamp().alias("ingestion_date")
+    ).dropDuplicates(["driver_number", "year"])
 
-from pyspark.sql.functions import col, when, lit, current_timestamp, concat, input_file_name, regexp_extract
-
-df_drivers_with_year = df_drivers_raw.withColumn("year", regexp_extract(input_file_name(), r"bronze/(\d{4})/", 1).cast("int"))
-
-df_drivers_silver = df_drivers_with_year.select(
-    col("driver_number").cast("int"),
-    col("full_name"),
-    col("name_acronym"),
-    col("team_name"),       
-    col("headshot_url"),    
-    col("country_code"),
-    
-    when(col("team_colour").isNull() | (col("team_colour") == ""), lit("#999999"))
-    .otherwise(concat(lit("#"), col("team_colour"))) 
-    .alias("team_colour"),
-    
-    col("year") 
-).withColumn("headshot_url", 
-    when((col("headshot_url").isNull()) | (col("headshot_url") == ""), lit(DEFAULT_PHOTO_URL))
-    .otherwise(col("headshot_url"))
-).withColumn("ingestion_date", current_timestamp()
-).dropDuplicates(["driver_number", "year"])
-
-# --- 3. WRITE ---
-print(f"Saving Delta table: {TABLE_NAME_DRIVERS}...")
-
+# 2. WRITE
 df_drivers_silver.write \
     .mode("overwrite") \
     .option("overwriteSchema", "true") \
     .format("delta") \
     .partitionBy("year") \
-    .saveAsTable(TABLE_NAME_DRIVERS)
+    .saveAsTable(TABLE_NAME)
 
-print(f"Drivers Dimension created successfully! Rows: {df_drivers_silver.count()}")
+print(f"{TABLE_NAME} CREATED.")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+# --- CELL 5: SILVER TEAMS ---
+
+# CONFIG
+TABLE_SOURCE = "silver_teams_standings" 
+TABLE_NAME = "silver_teams"
+GITHUB_ASSETS_URL = "https://raw.githubusercontent.com/NanoVelez/f1-fabric-proyect/main/assets/teams/"
+
+print(f"Building {TABLE_NAME}...")
+
+# 1. READ & DEDUPLICATE
+df_teams_unique = spark.table(TABLE_SOURCE) \
+    .groupBy("team_name", "year") \
+    .agg(_max("ingestion_date").alias("last_updated"))
+
+# 2. ENRICH
+df_teams_silver = df_teams_unique.withColumn(
+    "team_logo_url", 
+    concat(
+        lit(GITHUB_ASSETS_URL), 
+        regexp_replace(col("team_name"), " ", "%20"), 
+        lit(".png")
+    )
+).select(
+    col("team_name"),
+    col("year"),
+    col("team_logo_url"),
+    col("last_updated")
+)
+
+# 3. WRITE
+df_teams_silver.write \
+    .mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .format("delta") \
+    .partitionBy("year") \
+    .saveAsTable(TABLE_NAME)
+
+print(f"{TABLE_NAME} CREATED.")
 
 # METADATA ********************
 

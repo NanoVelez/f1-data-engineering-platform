@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "SemanticModel",
-    "displayName": "F1_Gold_Model (1)"
+    "displayName": "F1_Gold_Model"
   },
   "config": {
     "version": "2.0",
