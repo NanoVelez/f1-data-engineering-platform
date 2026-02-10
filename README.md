@@ -73,10 +73,9 @@ Instead of running notebooks manually, trigger the master pipeline to handle dep
     * *This will execute the Bronze (Ingestion) -> Silver (Transformation) -> Gold (Modeling) notebooks in sequence.*
 
 ### 3. Visualization
-1.  **Download the Report:**
-2.  **Get Your Connection String:**
-3.  **Re-point the Report:**
-4.  **Publish:** Click **Refresh** to load your data, then **Publish** to save it into your Fabric Workspace.
+1.  **Open the F1_Gold_Model (Semantic Model) in your workspace.**
+2.  **Go to Settings and ensure it is pointing to your newly created lh_f1 Lakehouse.**
+3.  **Open the F1_Data_Analytics_Platform (Report).**
 
 ## 📂 Project Structure
 ```text
@@ -87,10 +86,6 @@ f1-fabric-proyect/
 │   └── 📂 screenshots/         # Images used in this README
 │
 ├── 📂 src/                     # Source Code (Fabric Notebooks & ETL)
-│   ├── 01_bronze_ingest.ipynb    # API Extraction -> Raw JSON
-│   ├── 02_silver_transform.ipynb # Data Cleaning & Schema -> Delta Parquet
-│   └── 03_gold_modeling.ipynb    # Star Schema Modeling -> Reporting Tables
 │
-├── F1_Analytics.pbix        # Power BI Report file (or .pbip)
 ├── .gitignore                  # Git configuration
 └── README.md                   # Project Documentation
