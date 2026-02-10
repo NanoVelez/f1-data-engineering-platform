@@ -39,7 +39,7 @@ The data flows from the API through a structured Lakehouse architecture:
 
 * **Gold (Curated):** Business-level aggregations and Dimensional Modeling (Star Schema).
 
-## 🛠️ Tech Stack
+## ⚙️ Tech Stack
 * **Cloud Platform:** Microsoft Fabric (Data Engineering & Data Warehouse).
 
 * **Storage:** OneLake (ADLS Gen2).
@@ -157,7 +157,7 @@ The view below provides a deep dive into individual performance, tracking the ev
 
 ---
 
-## 🚀 Future Enhancements
+## 💎 Future Enhancements
 
 To further evolve this platform from a descriptive dashboard to a predictive analytics tool, the following features are planned:
 
