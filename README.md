@@ -6,7 +6,7 @@
 
 </div>
 
-<img width="2248" height="1132" alt="image" src="https://github.com/user-attachments/assets/6ec220b7-eff4-4144-ba27-fa1267ca2f62" />
+<img width="2248" height="1132" alt="image" src="assets/screenshots/Main_Menu.png" />
 <table style="width: 100%; border-collapse: collapse; border: none;">
   <tr style="border: none;">
     <td style="width: 50%; border: none; padding: 5px;">
