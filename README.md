@@ -24,7 +24,7 @@
 ## 📖 Project Overview
 This personal project aims to build a complete **End-to-End Data Pipeline** using **Microsoft Fabric**. The system ingests historical Formula 1 data, processes it following the Medallion Architecture (Bronze, Silver, Gold), and serves it for analytical reporting.
 
-The main goal is to apply **DP-600 (Fabric Analytics Engineer)** certification concepts in a real-world scenario.
+The main goal is to apply **DP-700 (Fabric Data Engineer)** certification concepts in a real-world scenario.
 
 ## 🏗️ Architecture (Medallion)
 The data flows from the API through a structured Lakehouse architecture:
