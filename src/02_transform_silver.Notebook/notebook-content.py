@@ -189,6 +189,7 @@ df_circuits_silver.orderBy("date_start") \
     .mode("overwrite") \
     .option("mergeSchema", "true") \
     .format("delta") \
+    .partitionBy("year") \
     .saveAsTable(TABLE_NAME)
 
 print(f"{TABLE_NAME} CREATED.")
