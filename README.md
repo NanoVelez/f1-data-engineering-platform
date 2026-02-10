@@ -155,6 +155,17 @@ The view below provides a deep dive into individual performance, tracking the ev
 
 <img width="2048" height="1140" alt="image" src="https://github.com/user-attachments/assets/557fac85-161e-4cbb-a41e-276d6a9c43de" />
 
+---
+
+## 🚀 Future Enhancements
+
+To further evolve this platform from a descriptive dashboard to a predictive analytics tool, the following features are planned:
+
+* **Real-Time Telemetry Integration:** Incorporating live signal data (speed, throttle, brake) using **Fabric Real-Time Intelligence** to analyze driver performance during live sessions.
+* **Predictive Modeling (Machine Learning):** Implementing **Synapse ML** to predict pit stop windows and race finishing positions based on historical degradation and weather variables.
+* **Advanced Tyre Strategy Analysis:** Developing a dedicated Gold layer table to track stint lengths and compound performance for more granular strategy insights.
+
+---
 
 ## 💻 How to Run & Deploy
 
@@ -175,6 +186,10 @@ Instead of running notebooks manually, trigger the master pipeline to handle dep
 1.  **Open the F1_Gold_Model (Semantic Model) in your workspace.**
 2.  **Go to Settings and ensure it is pointing to your newly created lh_f1 Lakehouse.**
 3.  **Open the F1_Data_Analytics_Platform (Report).**
+
+---
+
+
 
 ## 📂 Project Structure
 ```text
