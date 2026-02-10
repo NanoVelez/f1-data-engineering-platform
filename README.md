@@ -171,7 +171,7 @@ To further evolve this platform from a descriptive dashboard to a predictive ana
 
 ---
 
-## 💻 How to Run & Deploy
+## How to Run & Deploy
 
 This project is built to run natively inside a **Microsoft Fabric Workspace**.
 
