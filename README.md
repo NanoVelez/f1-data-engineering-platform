@@ -162,7 +162,7 @@ The view below provides a deep dive into individual performance, tracking the ev
 To further evolve this platform from a descriptive dashboard to a predictive analytics tool, the following features are planned:
 
 * **Real-Time Telemetry Integration:** Incorporating live signal data (speed, throttle, brake) using **Fabric Real-Time Intelligence** to analyze driver performance during live sessions.
-* **Predictive Modeling (Machine Learning):** Implementing **Synapse ML** to predict pit stop windows and race finishing positions based on historical degradation and weather variables.
+* **Predictive Modeling:** Implementing **Synapse ML** to predict pit stop windows and race finishing positions based on historical degradation and weather variables.
 * **Advanced Tyre Strategy Analysis:** Developing a dedicated Gold layer table to track stint lengths and compound performance for more granular strategy insights.
 
 ---
