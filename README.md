@@ -150,6 +150,7 @@ The report is designed for high-level competitive analysis, moving beyond simple
 * **Temporal Storytelling:** The timeline doesn't just filter data; it recalculates the entire state of the championship at any given point in time.
 
 #### Driver Championship Standings
+* **Multi-Season & Round-by-Round Navigation:** Users can slice data by specific seasons or replay the championship race-by-race.
 * The view below provides a deep dive into individual performance, tracking the evolution of the title race with a focus on consistency and head-to-head metrics.
 
 <img width="2048" height="1140" alt="image" src="https://github.com/user-attachments/assets/557fac85-161e-4cbb-a41e-276d6a9c43de" />
