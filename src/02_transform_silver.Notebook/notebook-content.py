@@ -8,8 +8,14 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
-# META       "default_lakehouse_name": "",
-# META       "default_lakehouse_workspace_id": ""
+# META       "default_lakehouse": "061b5888-c63f-4658-b28e-fffb5af3ca67",
+# META       "default_lakehouse_name": "lh_f1",
+# META       "default_lakehouse_workspace_id": "399cf811-13f0-4d3d-80bb-5f12b960d7a3",
+# META       "known_lakehouses": [
+# META         {
+# META           "id": "061b5888-c63f-4658-b28e-fffb5af3ca67"
+# META         }
+# META       ]
 # META     }
 # META   }
 # META }
@@ -84,8 +90,6 @@ df_silver = df_raw.select(
 ).na.drop(subset=["driver_number", "position"])
 
 # --- 3. WRITE ---
-print(f"Saving Delta table: {TABLE_NAME}...")
-
 df_silver.write \
     .mode("overwrite") \
     .option("mergeSchema", "true") \
@@ -176,8 +180,6 @@ df_circuits_silver = df_filtered.select(
 )
 
 # --- 3. WRITE ---
-print(f"Saving Delta table: {TABLE_NAME}...")
-
 df_circuits_silver.orderBy("date_start") \
     .write \
     .mode("overwrite") \
