@@ -206,7 +206,7 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 #### Step 3: Lakehouse Binding in Notebooks
 **Why is it vital to change the Data Source?** When cloning the project into a new Workspace, the notebooks "lose" the physical path to the data. We need to tell them exactly where to read and write.
 1. Open each of the imported Notebooks.
-2. In the "Explorer" side panel select f1_lh Lakehouse.
+2. In the "Explorer" side panel select `lh_f1` Lakehouse.
 
 | Add Data Item | Select Lakehouse |
 | :---: | :---: |
