@@ -195,6 +195,9 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 1. Open your Fabric Workspace and navigate to the Git integration settings.
 2. Connect this repository, select the `main` branch, and sync the `deployment/` folder.
 
+<img width="1001" height="833" alt="Git_Sync" src="assets/screenshots/Git_Sync.png" />
+
+
 #### Step 2: Orchestrator Preparation (Data Pipeline)
 **What do we achieve by downloading this ZIP file first?** Fabric data pipelines contain very specific internal IDs that block direct synchronization via Git if they don't match the destination workspace. Downloading it allows us to import it manually later.
 1. Go to the file view in your repository (or via the Fabric interface).
@@ -204,6 +207,14 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 **Why is it vital to change the Data Source?** When cloning the project into a new Workspace, the notebooks "lose" the physical path to the data. We need to tell them exactly where to read and write.
 1. Open each of the imported Notebooks.
 2. In the "Explorer" side panel select f1_lh Lakehouse.
+
+<p align="center">
+  <img width="350" alt="Explorer_panel" src="assets/screenshots/Explorer_panel.png" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img width="600" alt="Lakehouse_Select" src="assets/screenshots/Lakehouse_Select.png" />
+</p>
+
+
 
 #### Step 4: Semantic Model Configuration (Master Setup)
 **What is the purpose of executing this master notebook?** Instead of manually creating and reconnecting the Power BI model, this Python script automates the "Direct Lake" connection between your local data and the semantic model, repairing any links broken during the Git import.
