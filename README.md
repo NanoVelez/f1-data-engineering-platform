@@ -226,6 +226,12 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 3. The system will prompt you to create a connection for the "Semantic Model Refresh" step. Authorize it with your credentials.
 4. Select each activity box in the pipeline and, in the "Settings" tab, make sure to select the correct notebooks from your Workspace.
 
+| 1. Connection Request (Refresh) | 2. Create Organizational Credentials |
+| :---: | :---: |
+| <img width="95%" alt="Semantic Model connection prompt" src="assets/screenshots/Semantic_Request.png" /> | <img width="95%" alt="Data connection creation screen" src="assets/screenshots/Connection_Creation.png" /> |
+| **3. Notebook Error (Broken Link)** | **4. Fixed Notebook (Manual Selection)** |
+| <img width="95%" alt="Error showing incorrect notebook ID" src="assets/screenshots/Broken_Connection.png" /> | <img width="95%" alt="Notebook correctly selected from workspace" src="assets/screenshots/Fixed_Connection.png" /> |
+
 #### Step 6: Final Execution and Visualization
 **What is the final result of all this infrastructure?** Watching the data flow seamlessly from the API all the way to the report in a fully automated manner.
 1. Click **Run** on the Data Pipeline and wait for all activities to finish successfully.
