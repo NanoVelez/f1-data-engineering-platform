@@ -213,7 +213,6 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 | <img width="250" alt="Explorer_panel" src="assets/screenshots/Explorer_panel.png" /> | <img width="600" alt="Lakehouse_Select" src="assets/screenshots/Lakehouse_Select.png" /> |
 
 
-
 #### Step 4: Semantic Model Configuration (Master Setup)
 **What is the purpose of executing this master notebook?** Instead of manually creating and reconnecting the Power BI model, this Python script automates the "Direct Lake" connection between your local data and the semantic model, repairing any links broken during the Git import.
 1. Open the `00_Master_Setup` notebook.
@@ -226,16 +225,21 @@ To replicate this Formula 1 data project in your own Microsoft Fabric environmen
 3. The system will prompt you to create a connection for the "Semantic Model Refresh" step. Authorize it with your credentials.
 4. Select each activity box in the pipeline and, in the "Settings" tab, make sure to select the correct notebooks from your Workspace.
 
-| 1. Connection Request (Refresh) | 2. Create Organizational Credentials |
+| Connection Request (Refresh) | Create Organizational Credentials |
 | :---: | :---: |
 | <img width="95%" alt="Semantic Model connection prompt" src="assets/screenshots/Semantic_Request.png" /> | <img width="95%" alt="Data connection creation screen" src="assets/screenshots/Connection_Creation.png" /> |
-| **3. Notebook Error (Broken Link)** | **4. Fixed Notebook (Manual Selection)** |
+| **Notebook Error (Broken Link)** | **Fixed Notebook (Manual Selection)** |
 | <img width="95%" alt="Error showing incorrect notebook ID" src="assets/screenshots/Broken_Connection.png" /> | <img width="95%" alt="Notebook correctly selected from workspace" src="assets/screenshots/Fixed_Connection.png" /> |
+
 
 #### Step 6: Final Execution and Visualization
 **What is the final result of all this infrastructure?** Watching the data flow seamlessly from the API all the way to the report in a fully automated manner.
 1. Click **Run** on the Data Pipeline and wait for all activities to finish successfully.
 2. Once finished, open the visual report. The data will now be ingested, transformed, and ready for analysis!
+
+| 1. Successful Pipeline Execution | 2. Final F1 Dashboard |
+| :---: | :---: |
+| <img width="95%" alt="Successful data pipeline execution" src="assets/screenshots/Pipeline.png" /> | <img width="95%" alt="F1 Data Analytics Platform Main Menu" src="assets/screenshots/Main_Menu.png" /> |
 
 ---
 
