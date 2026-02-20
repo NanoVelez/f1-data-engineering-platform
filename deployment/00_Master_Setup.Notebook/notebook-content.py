@@ -16,42 +16,42 @@
 
 # CELL ********************
 
-# 1. INSTALACIÓN AUTOMÁTICA (La línea mágica que faltaba)
-# Esto asegura que la librería exista antes de intentar importarla
+# 1. AUTOMATIC INSTALLATION (The missing magic line)
+# This ensures the library exists before trying to import it
 %pip install semantic-link-labs
 
-# 2. IMPORTACIÓN Y LÓGICA
+# 2. IMPORT AND LOGIC
 import sempy_labs as sl
 import time
 
-# --- CONFIGURACIÓN AUTOMÁTICA ---
-# Al dejarlo en None, se aplicará al workspace y lakehouse actuales del notebook
-MODEL_NAME = "F1_Gold_Model"  # Asegúrate de que este sea el nombre exacto
+# --- AUTOMATIC CONFIGURATION ---
+# By leaving it as None, it will apply to the notebook's current workspace and lakehouse
+MODEL_NAME = "F1_Gold_Model"  # Make sure this is the exact name
 
-print(f"🔄 Iniciando remapeo automático del modelo: {MODEL_NAME}")
+print(f"Starting automatic model remapping: {MODEL_NAME}")
 
 try:
-    # 1. Remapear la conexión (Cablear al Lakehouse actual)
-    print("   🔌 Buscando Lakehouse adjunto para reconectar...")
+    # 1. Remap the connection (Wire to the current Lakehouse)
+    print("   Searching for attached Lakehouse to reconnect...")
     sl.directlake.update_direct_lake_model_connection(
         dataset = MODEL_NAME,
         source_type = "Lakehouse",
         use_sql_endpoint = True
     )
-    print("   ✅ Conexión remapeada con éxito.")
+    print("   Connection successfully remapped.")
 
-    # 2. Sincronizar el esquema (Leer las tablas nuevas)
-    print("   🔄 Sincronizando esquema...")
+    # 2. Synchronize the schema (Read the new tables)
+    print("   Synchronizing schema...")
     sl.directlake.direct_lake_schema_sync(
         dataset = MODEL_NAME
     )
-    print("   ✅ Esquema sincronizado.")
+    print("   Schema synchronized.")
 
-    print("\n🚀 ¡LISTO! El modelo ya apunta a tus datos locales.")
+    print("\nDONE! The model now points to your local data.")
 
 except Exception as e:
-    print(f"\n❌ Error: {e}")
-    print("💡 PISTA: ¿Has añadido un Lakehouse al panel izquierdo ('Lakehouses') de este notebook?")
+    print(f"\nError: {e}")
+    print("HINT: Have you added a Lakehouse to the left panel ('Lakehouses') of this notebook?")
 
 # METADATA ********************
 
